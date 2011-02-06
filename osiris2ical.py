@@ -2,7 +2,7 @@
 #
 #
 #          Author: Hiram (  hiram_ AT g m x DOT n e t   )
-#		   Website: http://gitorious.org/osiris2ical/osiris2ical
+#		   Website: http://gitorious.org/osiris2ical#more
 #          License: GPL v3 or later  (http://www.fsf.org/licensing/licenses/agpl-3.0.html)        
 #          Dependencies: Beautiful Soup (http://www.crummy.com/software/BeautifulSoup/)  Python License
 #                        Ical for python (http://pypi.python.org/pypi/icalendar/2.0.1)  LGPL
