@@ -23,6 +23,7 @@ from datetime import datetime
 from icalendar import UTC # timezone
 import os.path
 import re
+import time
 import sys
 import getpass
 from optparse import OptionParser
@@ -57,7 +58,7 @@ def main():
     
     password = getpass.getpass()    
     page = getPage(username, password)
-    cal = parsePage(page)
+    cal = parsePage(page, username)
     saveIcal(cal)
 
                   
@@ -102,7 +103,7 @@ def checkLoggedIn(page):
     return soup.find(text=re.compile("Laatst ingelogd")) != None
 
 
-def parsePage(page):
+def parsePage(page, username):
     soup = BeautifulSoup(page)
   
     geroosterd =  soup('span', id="RoosterIngeroosterd0")[0].find('table', "x1h")
@@ -116,8 +117,8 @@ def parsePage(page):
     
     #setup calendar
     cal = Calendar()
-    cal.add('prodid', '-//Mijn Rooster//osiris.uu.nl//')
     cal.add('version', '2.0')
+    cal.add('prodid', '-//Mijn Rooster//osiris.uu.nl//')
     cal.add('x-wr-calname', 'Rooster')
     cal.add('X-WR-TIMEZONE', 'Europe/Amsterdam')
     
@@ -161,7 +162,7 @@ def parsePage(page):
             event.add('dtstart', datetime(jaar,maand,dag,startuur,startmin,0))
             event.add('dtend', datetime(jaar,maand,dag,enduur,endmin,0))
             event.add('dtstamp', datetime.now())
-            event['uid'] = str(jaar)+str(maand)+str(dag)+'T'+str(startuur)+str(startmin)+'00/'+vakcode+'0@osiris.uu.nl'
+            event['uid'] = str(jaar)+str(maand)+str(dag)+'T'+str(startuur)+str(startmin)+'00/'+username+vakcode+str(datetime.now().toordinal())+'0@osiris.uu.nl'
             cal.add_component(event)
       
         elif tr.contents[0].name == 'td':
