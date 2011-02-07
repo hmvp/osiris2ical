@@ -88,7 +88,7 @@ def getPage(username, password):
     
     #check of we wel echt zijn ingelogged
     if not checkLoggedIn(page):
-        print('De ingevoerde inlog gegevens kloppen niet!')
+        print('De ingevoerde inloggegevens kloppen niet!')
         sys.exit(2)
     
     #fucked up osiris request, anders krijgen we een fout
