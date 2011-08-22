@@ -107,7 +107,7 @@ def checkLoggedIn(page):
 def parsePage(page, username):
     soup = BeautifulSoup(page)
   
-    geroosterd =  soup('span', id="RoosterIngeroosterd0")[0].find('table', "x1h")
+    geroosterd =  soup('span', id="RoosterIngeroosterd0")[0].find('table', "OraTableContent")
     ingeloggedstring = soup.find(text=re.compile("Laatst ingelogd"))
 
     m = re.search('(\d{4})',ingeloggedstring)
@@ -148,8 +148,8 @@ def parsePage(page, username):
             naam = tr.contents[3].span.string
             ctype = tr.contents[5].span.string
             groep = tr.contents[7].span.string if tr.contents[7].span != None else ''
-            gebouw = tr.contents[9].a.string
-            ruimte = tr.contents[11].span.string
+			gebouw = tr.contents[9].a.string if tr.contents[9].a != None else ''
+            ruimte = tr.contents[11].span.string if tr.contents[11].span != None else ''
             docent = tr.contents[13].span.string  if tr.contents[13].span != None else ''
               
             description = groep + '\n' if groep != '' else ''
