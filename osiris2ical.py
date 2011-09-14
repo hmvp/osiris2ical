@@ -148,7 +148,7 @@ def parsePage(page, username):
             naam = tr.contents[3].span.string
             ctype = tr.contents[5].span.string
             groep = tr.contents[7].span.string if tr.contents[7].span != None else ''
-			gebouw = tr.contents[9].a.string if tr.contents[9].a != None else ''
+            gebouw = tr.contents[9].a.string if tr.contents[9].a != None else ''
             ruimte = tr.contents[11].span.string if tr.contents[11].span != None else ''
             docent = tr.contents[13].span.string  if tr.contents[13].span != None else ''
               
