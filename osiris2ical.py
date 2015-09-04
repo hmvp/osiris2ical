@@ -1,7 +1,7 @@
 #!/usr/bin/env python -W ignore::DeprecationWarning
 #
 #
-#          Author: Hiram (  hiram_ AT g m x DOT n e t   )
+#          Authors: Hiram (  hiram_ AT g m x DOT n e t   ), Mathijs Henquet (mathijs.henquet@gmail.com)
 #		   Website: http://gitorious.org/osiris2ical#more
 #          License: GPL v3 or later  (http://www.fsf.org/licensing/licenses/agpl-3.0.html)        
 #          Dependencies: Beautiful Soup (http://www.crummy.com/software/BeautifulSoup/)  Python License
@@ -11,9 +11,8 @@
 #
 #
 #
-VERSION='1.1'
+VERSION='1.2'
 ICALFILE='rooster.ics'
-
 
 import urllib2
 import urllib
@@ -21,7 +20,6 @@ import cookielib
 from BeautifulSoup import BeautifulSoup, Tag, NavigableString
 from icalendar import Calendar, Event, Timezone
 from datetime import datetime
-from icalendar import UTC # timezone
 import os.path
 import re
 import time
@@ -41,10 +39,6 @@ monthnames = ['Januari',
               'Oktober', 
               'November', 
               'December']
-
-
-
-
     
 def main():
     usage = "usage: %prog <username>"
@@ -65,37 +59,48 @@ def main():
                   
 def getPage(username, password):
     #set up cookie handler
-    cj = cookielib.LWPCookieJar()
+    cj = cookielib.CookieJar()
     opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+    opener.addheaders = [('User-Agent', 'Mozilla/5.0 (Roosterdata spider, stelletje prutsers waarom moet ik dit zelf doen?)')]
     urllib2.install_opener(opener)
     
-    #http request set up
-    txheaders =  {'User-Agent' : ' Mozilla/5.0 (Roosterdata spider, stelletje prutsers waarom moet ik dit zelf doen?)'}
-    
-    url = 'https://www.osiris.universiteitutrecht.nl/osistu_ospr/AuthenticateUser.do'
-    postvalues = {'gebruikersNaam' : username,
-              'wachtWoord' : password ,
-              'event' : 'login' }
-    loginrequest = urllib2.Request(url ,urllib.urlencode(postvalues), txheaders)
-    
-    url = 'https://www.osiris.universiteitutrecht.nl/osistu_ospr/KiesRooster.do'
-    postvalues = {'event' : 'toonTotaalrooster' } 
-    datarequest = urllib2.Request(url ,urllib.urlencode(postvalues), txheaders)
-    
-    #actual requests
-    #inlog request, geeft ons een cookie
+    # go to the start page
+    urllib2.urlopen('https://www.osiris.universiteitutrecht.nl/osistu_ospr/StartPagina.do')
+
+    # go to the login page
+    urllib2.urlopen('https://www.osiris.universiteitutrecht.nl/osistu_ospr/Personalia.do')
+
+    #login request, geeft ons een cookie
+    loginrequest = urllib2.Request(
+        'https://www.osiris.universiteitutrecht.nl/osistu_ospr/AuthenticateUser.do', 
+        urllib.urlencode({
+            'gebruikersNaam' : username,
+            'wachtWoord' : password ,
+            'event' : 'login'
+        })
+    )
     page = urllib2.urlopen(loginrequest)
-    
+
     #check of we wel echt zijn ingelogged
     if not checkLoggedIn(page):
         print('De ingevoerde inloggegevens kloppen niet!')
         sys.exit(2)
+
     
-    #fucked up osiris request, anders krijgen we een fout
-    page = urllib2.urlopen(url)
+    rooster_url = 'https://www.osiris.universiteitutrecht.nl/osistu_ospr/KiesRooster.do'
     
-    #data request, hiermee krijgen we data
+    #open de rooster pagina
+    page = urllib2.urlopen(rooster_url)
+    
+    #vind de requestToken en open het totaalrooster
+    requestToken = BeautifulSoup(page).find('input', id="requestToken")['value']
+    postvalues = {
+        'event' : 'toonTotaalrooster', 
+        'requestToken': requestToken
+    } 
+    datarequest = urllib2.Request(rooster_url, urllib.urlencode(postvalues))
     page = urllib2.urlopen(datarequest)
+
     return page
 
 
@@ -106,8 +111,10 @@ def checkLoggedIn(page):
 
 def parsePage(page, username):
     soup = BeautifulSoup(page)
+
+    #print(soup.prettify())
   
-    geroosterd =  soup('span', id="RoosterIngeroosterd0")[0].find('table', "OraTableContent")
+    geroosterd = soup.find('span', id="RoosterIngeroosterd0").find('table', "OraTableContent")
     ingeloggedstring = soup.find(text=re.compile("Laatst ingelogd"))
 
     m = re.search('(\d{4})',ingeloggedstring)
@@ -175,7 +182,7 @@ def parsePage(page, username):
   
 def saveIcal(cal):  
     icalFile = open(ICALFILE, 'w')
-    icalFile.write(cal.as_string())
+    icalFile.write(cal.to_ical())
     icalFile.close()
     print('ical opgeslagen in rooster.ics')
 
